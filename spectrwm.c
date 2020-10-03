@@ -1567,7 +1567,7 @@ get_atom_from_string(const char *str)
 
 void
 get_wm_protocols(struct ws_win *win) {
-	int				i;
+	int				i = 0;
 	xcb_icccm_get_wm_protocols_reply_t	wpr;
 
 	if (xcb_icccm_get_wm_protocols_reply(conn,
@@ -1629,7 +1629,7 @@ teardown_ewmh(void)
 	int				i, num_screens;
 	xcb_window_t			id;
 	xcb_get_property_cookie_t	pc;
-	xcb_get_property_reply_t	*pr;
+	xcb_get_property_reply_t	*pr = NULL;
 
 	num_screens = get_screen_count();
 
@@ -1650,13 +1650,14 @@ teardown_ewmh(void)
 			    a_net_supported);
 		}
 		free(pr);
+        pr = NULL;
 	}
 }
 
 void
 ewmh_autoquirk(struct ws_win *win)
 {
-	xcb_get_property_reply_t	*r;
+	xcb_get_property_reply_t	*r = NULL;
 	xcb_get_property_cookie_t	c;
 	xcb_atom_t			*type;
 	int				i, n;
@@ -1686,6 +1687,7 @@ ewmh_autoquirk(struct ws_win *win)
 		}
 	}
 	free(r);
+    r = NULL;
 }
 
 void
@@ -2660,6 +2662,7 @@ bar_window_name(char *s, size_t sz, struct swm_region *r)
 	title = get_win_name(r->ws->focus->id);
 	bar_strlcat_esc(s, title, sz);
 	free(title);
+    title = NULL;
 }
 
 bool
@@ -3120,6 +3123,7 @@ bar_split_format(char *format)
 	/* Allocate the data structures for the bar sections */
 	if (numsect > maxsect) {
 		free(bsect);
+        bsect = NULL;
 		if ((bsect = calloc(numsect, sizeof(struct bar_section)
 		   )) == NULL)
 			err(1, "bar_split_format: failed to calloc memory.");
@@ -3828,6 +3832,7 @@ get_win_state(xcb_window_t w)
 		if (r->type == a_state && r->format == 32 && r->length == 2)
 			result = *((uint32_t *)xcb_get_property_value(r));
 		free(r);
+        r = NULL;
 	}
 
 	DNPRINTF(SWM_D_MISC, "property: win %#x, state: %s(%u)\n",
@@ -3877,6 +3882,7 @@ client_msg(struct ws_win *win, xcb_atom_t a, xcb_timestamp_t t)
 	DNPRINTF(SWM_D_EVENT, "win %#x, atom: %s(%u), time: %#x\n",
 	    win->id, name, a, t);
 	free(name);
+    name = NULL;
 #endif
 
 	bzero(&ev, sizeof ev);
@@ -4246,6 +4252,7 @@ fake_keypress(struct ws_win *win, xcb_keysym_t keysym, uint16_t modifiers)
 	    XCB_EVENT_MASK_KEY_RELEASE, (const char *)&event);
 
 	free(keycode);
+    keycode = NULL;
 }
 
 void
@@ -4285,6 +4292,7 @@ get_pointer_win(xcb_window_t root)
 			DNPRINTF(SWM_D_EVENT, "none\n");
 		}
 		free(r);
+        r = NULL;
 	}
 
 	return (win);
@@ -4362,6 +4370,7 @@ root_to_region(xcb_window_t root, int check)
 				r = cfw->ws->r;
 
 			free(gifr);
+            gifr = NULL;
 		}
 	}
 
@@ -4379,6 +4388,7 @@ root_to_region(xcb_window_t root, int check)
 				    qpr->root_y < MAX_Y(r))
 					break;
 			free(qpr);
+            qpr = NULL;
 		}
 	}
 
@@ -4449,6 +4459,7 @@ find_window(xcb_window_t id)
 			    id, qtr->parent);
 #endif
 		free(qtr);
+        qtr = NULL;
 	}
 
 #ifdef SWM_DEBUG
@@ -4494,6 +4505,7 @@ spawn(int ws_idx, union arg *args, bool close_fd)
 		}
 		setenv("LD_PRELOAD", ret, 1);
 		free(ret);
+        ret = NULL;
 	} else {
 		setenv("LD_PRELOAD", SWM_LIB, 1);
 	}
@@ -4826,7 +4838,9 @@ focus_win(struct ws_win *win)
 	draw_frame(win);
 out:
 	free(gifr);
+    gifr = NULL;
 	free(war);
+    war = NULL;
 	DNPRINTF(SWM_D_FOCUS, "done\n");
 }
 
@@ -4876,6 +4890,7 @@ event_drain(uint8_t rt)
 			event_handle(evt);
 
 		free(evt);
+        evt = NULL;
 	}
 }
 
@@ -6685,6 +6700,7 @@ get_win_name(xcb_window_t win)
 	r = xcb_get_property_reply(conn, c, NULL);
 	if (r && r->type == XCB_NONE) {
 		free(r);
+        r = NULLL;
 		/* Use WM_NAME instead; no UTF-8. */
 		c = xcb_get_property(conn, 0, win, XCB_ATOM_WM_NAME,
 		    XCB_GET_PROPERTY_TYPE_ANY, 0, UINT_MAX);
@@ -6701,6 +6717,7 @@ get_win_name(xcb_window_t win)
 		err(1, "get_win_name: failed to allocate memory.");
 
 	free(r);
+    r = NULL;
 
 	return (name);
 }
@@ -6751,6 +6768,7 @@ uniconify(struct binding *bp, struct swm_region *r, union arg *args)
 		name = get_win_name(win->id);
 		fprintf(lfile, "%s.%u\n", name, win->id);
 		free(name);
+        name = NULL;
 	}
 
 	fclose(lfile);
@@ -6822,6 +6840,7 @@ search_win_cleanup(void)
 		xcb_destroy_window(conn, sw->indicator);
 		TAILQ_REMOVE(&search_wl, sw, entry);
 		free(sw);
+        sw = NULL;
 	}
 #endif
 }
@@ -6949,18 +6968,22 @@ search_resp_uniconify(const char *resp, size_t len)
 		name = get_win_name(win->id);
 		if (asprintf(&s, "%s.%u", name, win->id) == -1) {
 			free(name);
+            name = NULL;
 			continue;
 		}
 		free(name);
+        name = NULL;
 		if (strncmp(s, resp, len) == 0) {
 			/* XXX this should be a callback to generalize */
 			ewmh_apply_flags(win, win->ewmh_flags & ~EWMH_F_HIDDEN);
 			ewmh_update_wm_state(win);
 			stack(search_r);
 			free(s);
+            s = NULL;
 			break;
 		}
 		free(s);
+        s = NULL;
 	}
 }
 
@@ -7032,6 +7055,7 @@ ewmh_update_desktop_names(void)
 	}
 
 	free(name_list);
+    name_list = NULL;
 }
 
 void
@@ -7067,6 +7091,7 @@ ewmh_get_desktop_names(void)
 			++k;
 		}
 		free(r);
+        r = NULL;
 	}
 }
 
@@ -7102,6 +7127,7 @@ ewmh_update_client_list(void)
 		    XCB_ATOM_WINDOW, 32, count, wins);
 
 		free(wins);
+        wins = NULL;
 	}
 }
 
@@ -7155,6 +7181,7 @@ ewmh_update_desktops(void)
 	}
 
 	free(vals);
+    vals = NULL;
 }
 
 void
@@ -7179,9 +7206,11 @@ search_resp_search_workspace(const char *resp)
 	if (errstr) {
 		DNPRINTF(SWM_D_MISC, "workspace idx is %s: %s", errstr, q);
 		free(q);
+        q = NULL;
 		return;
 	}
 	free(q);
+    q = NULL;
 	a.id = ws_idx - 1;
 	switchws(NULL, search_r, &a);
 }
@@ -7206,9 +7235,11 @@ search_resp_search_window(const char *resp)
 	if (errstr) {
 		DNPRINTF(SWM_D_MISC, "window idx is %s: %s", errstr, s);
 		free(s);
+        s = NULL;
 		return;
 	}
 	free(s);
+    s = NULL;
 
 	TAILQ_FOREACH(sw, &search_wl, entry)
 		if (idx == sw->idx) {
@@ -7272,6 +7303,7 @@ done:
 	search_resp_action = SWM_SEARCH_NONE;
 	close(select_resp_pipe[0]);
 	free(resp);
+    resp = NULL;
 
 	xcb_flush(conn);
 }
@@ -7616,6 +7648,7 @@ get_next_event(bool dowait)
 		evt = ep->ev;
 		SIMPLEQ_REMOVE_HEAD(&events, entry);
 		free(ep);
+        ep = NULL;
 	} else if (dowait)
 		evt = xcb_wait_for_event(conn);
 	else
@@ -7878,6 +7911,7 @@ resize_win(struct ws_win *win, struct binding *bp, int opt)
 			break;
 		}
 		free(evt);
+        evt = NULL;
 	}
 	if (timestamp) {
 		region_containment(win, r, SWM_CW_ALLSIDES | SWM_CW_RESIZABLE |
@@ -7889,6 +7923,7 @@ resize_win(struct ws_win *win, struct binding *bp, int opt)
 out:
 	xcb_ungrab_pointer(conn, XCB_CURRENT_TIME);
 	free(xpr);
+    xpr = NULL;
 	DNPRINTF(SWM_D_EVENT, "done\n");
 }
 
@@ -8119,6 +8154,7 @@ move_win(struct ws_win *win, struct binding *bp, int opt)
 			break;
 		}
 		free(evt);
+        evt = NULL;
 	}
 	if (timestamp) {
 		region_containment(win, win->ws->r, SWM_CW_ALLSIDES |
@@ -8136,6 +8172,7 @@ move_win(struct ws_win *win, struct binding *bp, int opt)
 
 out:
 	free(qpr);
+    qpr = NULL;
 	xcb_ungrab_pointer(conn, XCB_CURRENT_TIME);
 	DNPRINTF(SWM_D_EVENT, "done\n");
 }
@@ -8459,9 +8496,12 @@ spawn_custom(struct swm_region *r, union arg *args, const char *spawn_name)
 	if (fork() == 0)
 		spawn(r->ws->idx, &a, true);
 
-	for (i = 0; i < spawn_argc; i++)
+	for (i = 0; i < spawn_argc; i++) {
 		free(real_args[i]);
+        real_args[i] = NULL;
+    }
 	free(real_args);
+    real_args = NULL;
 }
 
 void
@@ -8502,9 +8542,12 @@ spawn_select(struct swm_region *r, union arg *args, const char *spawn_name,
 		break;
 	}
 
-	for (i = 0; i < spawn_argc; i++)
+	for (i = 0; i < spawn_argc; i++) {
 		free(real_args[i]);
+        real_args[i] = NULL;
+    }
 	free(real_args);
+    real_args = NULL;
 }
 
 /* Argument tokenizer. */
@@ -8585,6 +8628,7 @@ spawn_insert(const char *name, const char *args, int flags)
 			err(1, "spawn_insert: strdup");
 	}
 	free(cp);
+    cp = NULL;
 
 	sp->flags = flags;
 
@@ -8606,8 +8650,9 @@ spawn_remove(struct spawn_prog *sp)
 	DNPRINTF(SWM_D_SPAWN, "name: %s\n", sp->name);
 
 	TAILQ_REMOVE(&spawns, sp, entry);
-	for (i = 0; i < sp->argc; i++)
+	for (i = 0; i < sp->argc; i++) {
 		free(sp->argv[i]);
+    }
 	free(sp->argv);
 	free(sp->name);
 	free(sp);
@@ -8676,6 +8721,7 @@ setconfspawn(const char *selector, const char *value, int flags)
 
 	setspawn(selector, args, flags);
 	free(args);
+    args = NULL;
 
 	DNPRINTF(SWM_D_SPAWN, "done\n");
 	return (0);
@@ -8809,6 +8855,7 @@ parsebinding(const char *bindstr, uint16_t *mod, enum binding_type *type,
 			if (*val > 255 || *val == 0) {
 				DNPRINTF(SWM_D_KEY, "invalid btn %u\n", *val);
 				free(str);
+                str = NULL;
 				return (1);
 			}
 		} else {
@@ -8817,6 +8864,7 @@ parsebinding(const char *bindstr, uint16_t *mod, enum binding_type *type,
 			if (ks == NoSymbol) {
 				DNPRINTF(SWM_D_KEY, "invalid key %s\n", name);
 				free(str);
+                str = NULL;
 				return (1);
 			}
 
@@ -8830,6 +8878,7 @@ parsebinding(const char *bindstr, uint16_t *mod, enum binding_type *type,
 		*mod = XCB_MOD_MASK_ANY;
 
 	free(str);
+    str = NULL;
 	DNPRINTF(SWM_D_KEY, "leave\n");
 	return (0);
 }
@@ -8909,6 +8958,7 @@ binding_remove(struct binding *bp)
 
 	RB_REMOVE(binding_tree, &bindings, bp);
 	free(bp->spawn_name);
+    bp->spawn_name = NULL;
 	free(bp);
 
 	DNPRINTF(SWM_D_KEY, "leave\n");
@@ -9176,6 +9226,7 @@ setkeymapping(const char *selector, const char *value, int flags)
 	}
 
 	free(keymapping_file);
+    keymapping_file = NULL;
 
 	DNPRINTF(SWM_D_KEY, "leave\n");
 	return (0);
